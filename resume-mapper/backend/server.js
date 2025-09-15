@@ -45,6 +45,17 @@ cron.schedule('0 0 * * *', () => {
   tokenTracker.lastReset = Date.now();
 });
 
+// Serve frontend build
+const clientDist = path.resolve(__dirname, '../frontend/dist');
+app.use(express.static(clientDist));
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
+// Serve React app for non-API routes
+app.get(/^\/(?!api).*/, (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console

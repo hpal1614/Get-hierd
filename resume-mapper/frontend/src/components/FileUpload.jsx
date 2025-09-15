@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { api } from '../services/api';
 
-export default function FileUpload({ onParsed }) {
+export default function FileUpload({ onParsed, onAltered, onOriginalFile, currentResume }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,6 +18,7 @@ export default function FileUpload({ onParsed }) {
     try {
       setLoading(true);
       setError('');
+      onOriginalFile?.(file);
       const data = await api.uploadResume(file);
       onParsed?.(data.structured);
     } catch (err) {
@@ -55,6 +56,26 @@ export default function FileUpload({ onParsed }) {
           if (f) upload(f);
         }}
       />
+      <div style={{ marginTop: 12 }}>
+        <label style={{ display: 'block', marginBottom: 4 }}>Upload Altered Resume/Job File (PDF)</label>
+        <input
+          type="file"
+          accept="application/pdf"
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            try {
+              setLoading(true);
+              const data = await api.uploadAlterations(f, currentResume || {});
+              if (data.updated) onAltered?.(data.updated);
+            } catch (_) {
+              setError('Failed to apply alterations');
+            } finally {
+              setLoading(false);
+            }
+          }}
+        />
+      </div>
       {error && <div style={{ color: 'crimson', marginTop: 8 }}>{error}</div>}
     </div>
   );
